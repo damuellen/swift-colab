@@ -130,7 +130,6 @@ fileprivate let CapturingSocket = PythonClass(
     
     "send_multipart": PythonInstanceMethod { args, kwargs in
       let msg = args[1]
-      print("started send_multipart")
       let input = encode_send_multipart(msg)
       printMessageStart()
       KernelPipe.send(input, to: .jupyterKernel)
@@ -145,7 +144,6 @@ fileprivate let CapturingSocket = PythonClass(
         decode_send_multipart(messages[0])
         break
       }
-      print("finished send_multipart")
       return Python.None
     }
   ]
