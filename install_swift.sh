@@ -122,6 +122,17 @@ if [[ $using_cached_swift == true && ! -e "toolchain" ]]; then
   exit -1
 fi
 
+apt install gnuplot
+
+cd /content
+git clone --single-branch -b RELEASE_1.1.4 https://github.com/jmcnamara/libxlsxwriter --quiet
+cd libxlsxwriter
+make
+sudo make install
+sudo ldconfig
+cd ../
+rm -rf libxlsxwriter
+
 # Download Swift toolchain
 
 if [[ $toolchain_type == "url" ]]; then
