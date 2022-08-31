@@ -89,6 +89,17 @@ if [[ $toolchain_type == "invalid" || $mode == "invalid" ]]; then
   exit -1
 fi
 
+apt install gnuplot
+
+cd /content
+git clone --single-branch -b RELEASE_1.1.4 https://github.com/jmcnamara/libxlsxwriter --quiet
+cd libxlsxwriter
+make
+sudo make install
+sudo ldconfig
+cd ../
+rm -rf libxlsxwriter
+
 cd /opt/swift
 echo $mode > /opt/swift/mode
 
@@ -121,17 +132,6 @@ if [[ $using_cached_swift == true && ! -e "toolchain" ]]; then
   echo "There should be a 'toolchain' folder when using cached Swift."
   exit -1
 fi
-
-apt install gnuplot
-
-cd /content
-git clone --single-branch -b RELEASE_1.1.4 https://github.com/jmcnamara/libxlsxwriter --quiet
-cd libxlsxwriter
-make
-sudo make install
-sudo ldconfig
-cd ../
-rm -rf libxlsxwriter
 
 # Download Swift toolchain
 
