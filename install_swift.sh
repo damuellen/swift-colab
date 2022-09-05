@@ -12,93 +12,33 @@ if [[ ! -d /opt/swift ]]; then
   echo "swift" > /opt/swift/runtime
 fi
 
-# Process command-line arguments
+old_IFS=$IFS
+IFS='.'
+read -a strarr <<< "$1"
+component_count=${#strarr[*]}
 
-# Check whether the first argument contains "https://", "http://", "file://", or 
-# another protocol.
-if [[ "$1" == *"://"* ]]; then
-  toolchain_type="url"
-  location=-1
-  
-  # Store URLs in an index because "/" can't be in file names.
-  while read line; do
-    if [[ $line == $1 ]]; then
-      if [[ $location != -1 ]]; then
-        echo "Cached toolchain URL index contained duplicates."
-        exit -1
-      fi
-      location=${#index_lines[*]}
-    fi
-    index_lines=( "${index_lines[@]}" "$line" )
-  done < /opt/swift/toolchains/index
-  
-  if [[ $location == -1 ]]; then
-    location=${#index_lines[*]}
-    if [[ $location == 0 ]]; then
-      index_contents="$1"
-    else
-      NEWLINE=$'\n'
-      index_contents=`cat /opt/swift/toolchains/index`
-      index_contents="${index_contents}${NEWLINE}${1}"
-    fi
-    echo "$index_contents" > /opt/swift/toolchains/index
-  fi
-  
-  version="url-${location}"
+if [[ $component_count -ge 2 ]]; then
+  # First argument is two components separated by a period like "5.6" or three
+  # components like "5.5.3".
+  toolchain_type="release"
 else
-  old_IFS=$IFS
-  IFS='.'
+  IFS='-'
   read -a strarr <<< "$1"
   component_count=${#strarr[*]}
-  
-  if [[ $component_count -ge 2 ]]; then
-    # First argument is two components separated by a period like "5.6" or three
-    # components like "5.5.3".
-    toolchain_type="release"
+
+  if [[ $component_count == 3 ]]; then
+    # First argument is three components in the format "YYYY-MM-DD".
+    toolchain_type="snapshot"
   else
-    IFS='-'
-    read -a strarr <<< "$1"
-    component_count=${#strarr[*]}
-    
-    if [[ $component_count == 3 ]]; then
-      # First argument is three components in the format "YYYY-MM-DD".
-      toolchain_type="snapshot"
-    else
-      # First argument is absent or improperly formatted.
-      toolchain_type="invalid"
-    fi
+    # First argument is absent or improperly formatted.
+    toolchain_type="invalid"
   fi
-  
-  version=$1
-  IFS=$old_IFS
 fi
 
-if [[ $# == 1 ]]; then
-  # Release mode - fine-tuned for the fastest user experience.
-  mode="release"
-elif [[ $# == 2 && $2 == "--swift-colab-dev" ]]; then
-  # Dev mode (undocumented) - best for debugging and modifying Swift-Colab.
-  mode="dev"
-else
-  # Unrecognized flags were passed in.
-  mode="invalid"
-fi
+version=$1
+IFS=$old_IFS
 
-if [[ $toolchain_type == "invalid" || $mode == "invalid" ]]; then
-  echo "Usage: install_swift.sh {MAJOR.MINOR.PATCH | YYYY-MM-DD | URL} [--swift-colab-dev]"
-  exit -1
-fi
-
-apt install gnuplot
-
-cd /content
-git clone --single-branch -b RELEASE_1.1.4 https://github.com/jmcnamara/libxlsxwriter --quiet
-cd libxlsxwriter
-make
-sudo make install
-sudo ldconfig
-cd ../
-rm -rf libxlsxwriter
+mode="release"
 
 cd /opt/swift
 echo $mode > /opt/swift/mode
@@ -146,32 +86,32 @@ if [[ $using_cached_swift == true ]]; then
 else
   echo "Downloading Swift $swift_desc"
   
-  if [[ $toolchain_type == "url" ]]; then
-    mkdir /opt/swift/download
-    cd /opt/swift/download
-    
-    curl $1 | tar -xz
-    src_filename="$(ls)"
-    mv $src_filename "/opt/swift/toolchain"
-    
-    cd /opt/swift
-    rm -r /opt/swift/download
-  else
-    if [[ $toolchain_type == "release" ]]; then
-      branch="swift-$version-release"
-      release="swift-$version-RELEASE"
-    elif [[ $toolchain_type == "snapshot" ]]; then
-      branch="development"
-      release="swift-DEVELOPMENT-SNAPSHOT-$version-a"
-    fi
-    
-    tar_file="$release-ubuntu18.04.tar.gz"
-    url="https://download.swift.org/$branch/ubuntu1804/$release/$tar_file"
-    
-    curl $url | tar -xz
-    mv "$release-ubuntu18.04" "toolchain"
+  if [[ $toolchain_type == "release" ]]; then
+    branch="swift-$version-release"
+    release="swift-$version-RELEASE"
+  elif [[ $toolchain_type == "snapshot" ]]; then
+    branch="development"
+    release="swift-DEVELOPMENT-SNAPSHOT-$version-a"
   fi
+
+  tar_file="$release-ubuntu18.04.tar.gz"
+  url="https://download.swift.org/$branch/ubuntu1804/$release/$tar_file"
+
+  curl $url | tar -xz &
   
+  apt install gnuplot
+
+  cd /content
+  git clone --single-branch -b RELEASE_1.1.4 https://github.com/jmcnamara/libxlsxwriter --quiet
+  cd libxlsxwriter
+  make
+  sudo make install
+  sudo ldconfig
+  cd /opt/swift
+  rm -rf /content/libxlsxwriter
+
+  mv "$release-ubuntu18.04" "toolchain"
+
   echo $version > "progress/swift-version"
 fi
 
