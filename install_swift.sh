@@ -94,7 +94,7 @@ else
     release="swift-DEVELOPMENT-SNAPSHOT-$version-a"
   fi
 
-  tar -xz /content/swift-5.7-RELEASE-ubuntu18.04.tar.gz  --directory /opt/swift/
+  tar -xzf /content/swift-5.7-RELEASE-ubuntu18.04.tar.gz  --directory /opt/swift/
   
   apt install gnuplot
 
