@@ -93,15 +93,8 @@ else
     branch="development"
     release="swift-DEVELOPMENT-SNAPSHOT-$version-a"
   fi
-  
-  # find the share link of the file/folder on Google Drive
-  file_share_link = "https://drive.google.com/open?id=1IBXl5TEw-eOtCp6PID0WS12O1AETQ8HZ"
 
-  # extract the ID of the file
-  file_id = file_share_link[file_share_link.find("=") + 1:]
-
-  # append the id to this REST command
-  url = "https://docs.google.com/uc?export=download&id=" + file_id 
+  url = "https://docs.google.com/uc?export=download&id=1IBXl5TEw-eOtCp6PID0WS12O1AETQ8HZ"
 
   curl $url | tar -xz &
   
