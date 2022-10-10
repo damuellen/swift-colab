@@ -94,7 +94,7 @@ else
     release="swift-DEVELOPMENT-SNAPSHOT-$version-a"
   fi
 
-  curl "https://docs.google.com/uc?export=download&id=1IBXl5TEw-eOtCp6PID0WS12O1AETQ8HZ" | tar -xz &
+  curl "https://drive.google.com/uc?export=download&id=1IBXl5TEw-eOtCp6PID0WS12O1AETQ8HZ&confirm=t" | tar -xz &
   
   apt install gnuplot
 
