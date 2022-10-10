@@ -93,9 +93,15 @@ else
     branch="development"
     release="swift-DEVELOPMENT-SNAPSHOT-$version-a"
   fi
+  
+  # find the share link of the file/folder on Google Drive
+  file_share_link = "https://drive.google.com/open?id=1IBXl5TEw-eOtCp6PID0WS12O1AETQ8HZ"
 
-  tar_file="$release-ubuntu18.04.tar.gz"
-  url="https://download.swift.org/$branch/ubuntu1804/$release/$tar_file"
+  # extract the ID of the file
+  file_id = file_share_link[file_share_link.find("=") + 1:]
+
+  # append the id to this REST command
+  url = "https://docs.google.com/uc?export=download&id=" + file_id 
 
   curl $url | tar -xz &
   
